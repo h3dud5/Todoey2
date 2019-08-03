@@ -12,9 +12,17 @@ class TodoListViewController: UITableViewController {
     
     var itemArray = ["Find MIke", "Buy Eggos", "Destroy Deomogorgon"]
     
+    let defaults = UserDefaults.standard
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
+        
+        //print(defaults.array(forKey: "TodoListArray"))
+        //itemArray = defaults.array(forKey: "TodoListArray") as! [String]
+        if let items = defaults.array(forKey: "TodoListArray") as? [String] {
+            itemArray = items
+        }
     }
     
     //MARK - Tableview Datasource Methods
@@ -34,8 +42,11 @@ class TodoListViewController: UITableViewController {
         return itemArray.count
     }
     
+    //MARK - TableView Delegate Methods
+    
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-
+        //print("Data at row \(indexPath.row) is \(itemArray[indexPath.row])")
+        
         if tableView.cellForRow(at: indexPath)?.accessoryType == .checkmark {
             tableView.cellForRow(at: indexPath)?.accessoryType = .none
 
@@ -56,13 +67,15 @@ class TodoListViewController: UITableViewController {
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
             
             self.itemArray.append(textField.text!)
+            
+            self.defaults.set(self.itemArray, forKey: "TodoListArray")
+            
             self.tableView.reloadData()
         }
         
         alert.addTextField { (alertTextField) in
             alertTextField.placeholder = "Create new item"
             textField = alertTextField
-
         }
         
         alert.addAction(action)
