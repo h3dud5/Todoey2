@@ -64,26 +64,28 @@ class TodoListViewController: UITableViewController {
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "TodoItemCell", for: indexPath)
         
-        if let item = todoItems?[indexPath.row]{
-            
-            cell.textLabel?.text = item.title
-            
-            cell.accessoryType = item.done ? .checkmark : .none
-            
-        } else {
-            cell.textLabel?.text = "No Items Added"
+        if let items = todoItems {
+            if items.count > 0 {
+                let item = items[indexPath.row]
+                cell.textLabel?.text = item.title
+                cell.accessoryType = item.done ? .checkmark : .none
+                return cell
+            }
         }
-            
+        
+        cell.textLabel?.text = "No Items Added"
         return cell
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         
-        return todoItems?.count ?? 1
+        if let items = todoItems {
+            if items.count > 0 {
+                return items.count
+            }
+        }
+        return 1
     }
-    
-    
-    
     
     //MARK - TableView Delegate Methods
     
@@ -102,36 +104,43 @@ class TodoListViewController: UITableViewController {
 //        saveItems()
         
         // Using Realm to update data
-        if let item = todoItems?[indexPath.row] {
-            do {
-                try realm.write {
-                    //realm.delete(item)
-                    item.done = !item.done
+        if let items = todoItems {
+            if items.count > 0 {
+                let item = items[indexPath.row]
+                do {
+                    try realm.write {
+                        //realm.delete(item)
+                        item.done = !item.done
+                    }
+                } catch {
+                    print("Error saving done status, \(error)")
                 }
-            } catch {
-                print("Error saving done status, \(error)")
+                
+                tableView.reloadData()
+                return
             }
         }
-        
-        tableView.reloadData()
-
         tableView.deselectRow(at: indexPath, animated: true)
+        addItem() // moved the steps from addButtonPressed to this method
         
     }
     
     //MARK - Add New Items
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
-        
+        addItem()
+    }
+    
+    func addItem(){
         var textField = UITextField()
         
         let alert = UIAlertController(title: "Add New Todoey Item", message: "", preferredStyle: .alert)
         
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
             
-//            let newItem = Item(context: self.context)
-//            newItem.title = textField.text!
-//            newItem.done = false
-//            newItem.parentCategory = self.selectedCategory
+            //            let newItem = Item(context: self.context)
+            //            newItem.title = textField.text!
+            //            newItem.done = false
+            //            newItem.parentCategory = self.selectedCategory
             
             //self.itemArray.append(newItem)
             
@@ -141,13 +150,13 @@ class TodoListViewController: UITableViewController {
             
             if let currentCategory = self.selectedCategory{
                 do{
-                try self.realm.write {
-                    let newItem = Item()
-                    newItem.title = textField.text!
-                    newItem.dateCreated = Date()
-                    currentCategory.items.append(newItem)
-                    self.realm.add(newItem)
-                }
+                    try self.realm.write {
+                        let newItem = Item()
+                        newItem.title = textField.text!
+                        newItem.dateCreated = Date()
+                        currentCategory.items.append(newItem)
+                        self.realm.add(newItem)
+                    }
                 }catch {
                     print("Error saving new items, \(error)")
                 }
